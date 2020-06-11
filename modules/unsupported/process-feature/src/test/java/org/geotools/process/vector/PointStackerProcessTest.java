@@ -50,7 +50,7 @@ import org.opengis.util.ProgressListener;
  * @author Cosmin Cioranu, Private
  * 
  * *****************************
- * Additional unit tests for CM_POINTSTACKER extensions of PointStackerCM (= originally called PointStackerProcess)
+ * Additional unit tests for CM_POINTSTACKER extensions of the PointStackerProcess
  * 
  * @author Sabrina Arnold, sarnold@codematix.de
  * June 2020
