@@ -15,7 +15,7 @@
  *    Lesser General Public License for more details.
  */
 
-package de.codematix.bast;
+package org.geotools.process.vector;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -36,7 +36,6 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequenceFactory;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.filter.sort.SortOrder;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -48,17 +47,17 @@ import org.opengis.util.ProgressListener;
  *
  * @author Martin Davis, OpenGeo
  * @author Cosmin Cioranu, Private
- * 
+ *
  * *****************************
- * Additional unit tests for CM_POINTSTACKER extensions of the PointStackerProcess
- * 
+ * Additional unit tests for CM_POINTSTACKER extensions of PointStackerProcess
+ *
  * @author Sabrina Arnold, sarnold@codematix.de
  * June 2020
  */
 
-public class PointStackerCMTest {
-    public static final int EXPECTED_ATTR_COUNT = 12;  // CM_POINTSTACKER 
-    
+public class PointStackerProcessTest {
+    public static final int EXPECTED_ATTR_COUNT = 9;  // CM_POINTSTACKER
+
     @Test
     public void testGridSimple() throws ProcessException, TransformException, FactoryException {
         // Simple dataset with some coincident points and attributes
@@ -72,23 +71,23 @@ public class PointStackerCMTest {
                         new Coordinate(8, 8),
                         new Coordinate(8.3, 8.3)
                 };
-        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1"); // CM_POINTSTACKER 
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I"); // CM_POINTSTACKER 
-        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east"); // CM_POINTSTACKER 
+        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1");  // CM_POINTSTACKER
+        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I");  // CM_POINTSTACKER
+        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east");  // CM_POINTSTACKER
         SimpleFeatureCollection fc = createSampleData(bounds, pts, attrA, attrB, attrC);
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
         SimpleFeatureCollection result =
                 psp.execute(
-                        fc, 
+                        fc,
                         "grid",
                         100, // cellSize
-                        PointStackerCM.PositionStackedGeom.Nearest, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Nearest, // weightClusterPosition
                         null, // normalize
                         null,
-                        null, 
+                        null,
                         null,
                         null,
                         null, // preserve location
@@ -100,11 +99,11 @@ public class PointStackerCMTest {
         checkSchemaCorrect(result.getSchema(), false, EXPECTED_ATTR_COUNT);
 
         assertEquals(3, result.size());
-        checkResultPoint(result, new Coordinate(4.25, 4.25), false, 1, 1, 
+        checkResultPoint(result, new Coordinate(4.25, 4.25), false, 1, 1,
                 null, null);
-        checkResultPoint(result, new Coordinate(6.5, 6.5), false, 2, 1, 
+        checkResultPoint(result, new Coordinate(6.5, 6.5), false, 2, 1,
                 null, null);
-        checkResultPoint(result, new Coordinate(8.4, 8.4), false, 2, 2, 
+        checkResultPoint(result, new Coordinate(8.4, 8.4), false, 2, 2,
                 null, null);
     }
 
@@ -120,25 +119,25 @@ public class PointStackerCMTest {
                         new Coordinate(4.1, 4.1),
                         new Coordinate(8, 8)
                 };
-        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3"); // CM_POINTSTACKER 
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II"); // CM_POINTSTACKER 
-        List<String> attrC = Lists.newArrayList("north", "south", "south", "north"); // CM_POINTSTACKER 
+        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3");
+        List<String> attrB = Lists.newArrayList("I", "V", "II", "II");
+        List<String> attrC = Lists.newArrayList("north", "south", "south", "north");
         SimpleFeatureCollection fc = createSampleData(bounds, pts, attrA, attrB, attrC);
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
         SimpleFeatureCollection result =
                 psp.execute(
-                        fc, 
+                        fc,
                         "grid",
                         100, // cellSize
-                        PointStackerCM.PositionStackedGeom.Weighted, // weighClusterPostion
+                        PointStackerProcess.PositionStackedGeom.Weighted, // weighClusterPostion
                         true, // normalize
                         null,
-                        null,
-                        null,
-                        null,
+                        null, 
+                        null, 
+                        null, 
                         null, // preserve location
                         bounds, // outputBBOX
                         1000, // outputWidth
@@ -147,9 +146,9 @@ public class PointStackerCMTest {
 
         checkSchemaCorrect(result.getSchema(), true, EXPECTED_ATTR_COUNT);
         assertEquals(2, result.size());
-        checkResultPoint(result, new Coordinate(4, 4), false, 3, 2, 
+        checkResultPoint(result, new Coordinate(4, 4), false, 3, 2,
                 1.0d, 1.0d);
-        checkResultPoint(result, new Coordinate(8, 8), false, 1, 1, 
+        checkResultPoint(result, new Coordinate(8, 8), false, 1, 1,
                 1.0d / 3, 1.0d / 2);
     }
 
@@ -166,25 +165,25 @@ public class PointStackerCMTest {
                         new Coordinate(8, 8),
                         new Coordinate(8.3, 8.3)
                 };
-        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1"); // CM_POINTSTACKER 
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I"); // CM_POINTSTACKER 
-        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east"); // CM_POINTSTACKER 
+        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1");
+        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I");
+        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east");
         SimpleFeatureCollection fc = createSampleData(bounds, pts, attrA, attrB, attrC);
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
         SimpleFeatureCollection result =
                 psp.execute(
                         fc, "grid",
                         100, // cellSize
-                        PointStackerCM.PositionStackedGeom.Weighted, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Weighted, // weightClusterPosition
                         true, // normalize
                         null,
                         null,
                         null,
                         null,
-                        PointStackerCM.PreserveLocation.Single, // preserve location
+                        PointStackerProcess.PreserveLocation.Single, // preserve location
                         bounds, // outputBBOX
                         1000, // outputWidth
                         1000, // outputHeight
@@ -192,11 +191,11 @@ public class PointStackerCMTest {
 
         checkSchemaCorrect(result.getSchema(), true, EXPECTED_ATTR_COUNT);
         assertEquals(3, result.size());
-        checkStackedPoint(new Coordinate(4, 4), 1, 1, 
+        checkStackedPoint(new Coordinate(4, 4), 1, 1,
                 getClosestResultPoint(result, new Coordinate(4, 4), false));
-        checkStackedPoint(null, 2, 1, 
+        checkStackedPoint(null, 2, 1,
                 getClosestResultPoint(result, new Coordinate(6.5, 6.5), false));
-        checkStackedPoint(null, 2, 2, 
+        checkStackedPoint(null, 2, 2,
                 getClosestResultPoint(result, new Coordinate(8, 8), false));
     }
 
@@ -213,25 +212,25 @@ public class PointStackerCMTest {
                         new Coordinate(8, 8),
                         new Coordinate(8.3, 8.3)
                 };
-        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1"); // CM_POINTSTACKER 
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I"); // CM_POINTSTACKER 
-        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east"); // CM_POINTSTACKER 
+        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1");
+        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I");
+        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east");
         SimpleFeatureCollection fc = createSampleData(bounds, pts, attrA, attrB, attrC);
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
         SimpleFeatureCollection result =
                 psp.execute(
                         fc, "grid",
                         100, // cellSize
-                        PointStackerCM.PositionStackedGeom.Weighted, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Weighted, // weightClusterPosition
                         true, // normalize
                         null,
                         null,
                         null,
                         null,
-                        PointStackerCM.PreserveLocation.Superimposed, // preserve location
+                        PointStackerProcess.PreserveLocation.Superimposed, // preserve location
                         bounds, // outputBBOX
                         1000, // outputWidth
                         1000, // outputHeight
@@ -239,12 +238,12 @@ public class PointStackerCMTest {
 
         checkSchemaCorrect(result.getSchema(), true, EXPECTED_ATTR_COUNT);
         assertEquals(3, result.size());
-        checkStackedPoint(new Coordinate(4, 4), 1, 1, 
+        checkStackedPoint(new Coordinate(4, 4), 1, 1,
                 getClosestResultPoint(result, new Coordinate(4, 4), false));
         checkStackedPoint(
-                new Coordinate(6.5, 6.5), 2, 1, 
+                new Coordinate(6.5, 6.5), 2, 1,
                 getClosestResultPoint(result, new Coordinate(6.5, 6.5), false));
-        checkStackedPoint(null, 2, 2, 
+        checkStackedPoint(null, 2, 2,
                 getClosestResultPoint(result, new Coordinate(8, 8), false));
     }
 
@@ -255,8 +254,8 @@ public class PointStackerCMTest {
             assertEquals(expectedCoordinate, p.getCoordinate());
         }
 
-        assertEquals(count, f.getAttribute(PointStackerCM.ATTR_COUNT));
-        assertEquals(countUnique, f.getAttribute(PointStackerCM.ATTR_COUNT_UNIQUE));
+        assertEquals(count, f.getAttribute(PointStackerProcess.ATTR_COUNT));
+        assertEquals(countUnique, f.getAttribute(PointStackerProcess.ATTR_COUNT_UNIQUE));
     }
 
     /**
@@ -275,9 +274,9 @@ public class PointStackerCMTest {
                 new Coordinate[] {
                         new Coordinate(-121.813201, 48.777343), new Coordinate(-121.813, 48.777)
                 };
-        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1"); // CM_POINTSTACKER 
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I"); // CM_POINTSTACKER 
-        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east"); // CM_POINTSTACKER 
+        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1");
+        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I");
+        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east");
         SimpleFeatureCollection fc = createSampleData(inBounds, pts, attrA, attrB, attrC);
 
         ProgressListener monitor = null;
@@ -292,29 +291,29 @@ public class PointStackerCMTest {
                         6386464.2521607,
                         webMerc);
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
 
         SimpleFeatureCollection result = psp.execute(
-                        fc, 
-                        "grid", 
-                        100, // cellSize
-                        PointStackerCM.PositionStackedGeom.Weighted, // weightClusterPosition
-                        null, // normalize
-                        null,
-                        null,
-                        null,
-                        null,
-                        null, // preserve location
-                        outBounds, // outputBBOX
-                        1810, // outputWidth
-                        768, // outputHeight
-                        monitor);
+                fc,
+                "grid",
+                100, // cellSize
+                PointStackerProcess.PositionStackedGeom.Weighted, // weightClusterPosition
+                null, // normalize
+                null,
+                null,
+                null,
+                null,
+                null, // preserve location
+                outBounds, // outputBBOX
+                1810, // outputWidth
+                768, // outputHeight
+                monitor);
 
         checkSchemaCorrect(result.getSchema(), false, EXPECTED_ATTR_COUNT);
         assertEquals(1, result.size());
         assertEquals(inBounds.getCoordinateReferenceSystem(),
                 result.getBounds().getCoordinateReferenceSystem());
-        checkResultPoint(result, new Coordinate(-121.813201, 48.777343), false, 2, 
+        checkResultPoint(result, new Coordinate(-121.813201, 48.777343), false, 2,
                 2, null, null);
     }
 
@@ -331,9 +330,9 @@ public class PointStackerCMTest {
                 new Coordinate[] {
                         new Coordinate(-121.813201, 48.777343), new Coordinate(-121.813, 48.777)
                 };
-        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1"); // CM_POINTSTACKER 
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I"); // CM_POINTSTACKER 
-        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east"); // CM_POINTSTACKER 
+        List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1");
+        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I");
+        List<String> attrC = Lists.newArrayList("west", "south", "south", "west", "east");
         SimpleFeatureCollection fc = createSampleData(inBounds, pts, attrA, attrB, attrC);
 
         ProgressListener monitor = null;
@@ -348,13 +347,13 @@ public class PointStackerCMTest {
                         6386464.2521607,
                         webMerc);
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
 
-        SimpleFeatureCollection result = 
+        SimpleFeatureCollection result =
                 psp.execute(
                         fc, "grid",
                         100, // cellSize
-                        PointStackerCM.PositionStackedGeom.Weighted, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Weighted, // weightClusterPosition
                         null, // normalize
                         null,
                         null,
@@ -403,13 +402,13 @@ public class PointStackerCMTest {
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
         SimpleFeatureCollection result =
                 psp.execute(
                         fc,
                         "Attribute B",
                         null, // cellSize
-                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
                         null,
                         null,
@@ -460,13 +459,13 @@ public class PointStackerCMTest {
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
         SimpleFeatureCollection result =
                 psp.execute(
                         fc,
                         "Attribute B",
                         null, // cellSize
-                        PointStackerCM.PositionStackedGeom.Extent, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Extent, // weightClusterPosition
                         null, // normalize
                         null,
                         null,
@@ -481,7 +480,7 @@ public class PointStackerCMTest {
         checkSchemaCorrect(result.getSchema(), false, EXPECTED_ATTR_COUNT);
 
         assertEquals(3, result.size());
-        checkResultPoint(result, new Coordinate(7, 6), true,3, 3, 
+        checkResultPoint(result, new Coordinate(7, 6), true,3, 3,
                 null, null);
         checkResultPoint(result, new Coordinate(6.5, 7), true, 1, 1,
                 null, null);
@@ -516,16 +515,16 @@ public class PointStackerCMTest {
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
 
         SimpleFeatureCollection result =
                 psp.execute(
                         fc,
                         "Attribute B",
                         null, // cellSize
-                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
-                        "attribute a,scoreclassid",
+                        "attribute a,attribute c",
                         null,
                         null,
                         null,
@@ -537,8 +536,8 @@ public class PointStackerCMTest {
 
         checkSchemaCorrect(result.getSchema(), false, EXPECTED_ATTR_COUNT + 2);
         assertNotNull(result.getSchema().getDescriptor("attribute a"));
-        assertNotNull(result.getSchema().getDescriptor("scoreclassid"));
-
+        assertNotNull(result.getSchema().getDescriptor("attribute c"));
+        
         assertEquals(3, result.size());
         checkResultPoint(result, new Coordinate(7.25, 7.25), true,2, 2,
                 null, null);
@@ -547,7 +546,7 @@ public class PointStackerCMTest {
         checkResultPoint(result, new Coordinate(4, 4), true,2, 1,
                 null, null);
     }
-
+    
     /**
      * CM_POINTSTACKER: Sort a collection before returning in DESCENDING and ASCENDING order regarding the sortable 
      * integer attribute 'SortedByField'
@@ -577,7 +576,7 @@ public class PointStackerCMTest {
 
         ProgressListener monitor = null;
 
-        PointStackerCM psp = new PointStackerCM();
+        PointStackerProcess psp = new PointStackerProcess();
 
         // TEST DESCENDING ORDER
         SimpleFeatureCollection result =
@@ -585,7 +584,7 @@ public class PointStackerCMTest {
                         fc,
                         "grid",
                         1, // cellSize
-                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
                         null,
                         "attribute c",
@@ -613,11 +612,11 @@ public class PointStackerCMTest {
 
         try {
             while (featureIt.hasNext()) {
-                    SimpleFeature feature = featureIt.next();
-                    actualValue = feature.getAttribute(PointStackerCM.ATTR_SORTEDBYFIELD).toString();
-                    assert actualValue == expectedValueDesc.get(i): "Expected different value after sorting collection!"; 
-                    i = i + 1;
-                }
+                SimpleFeature feature = featureIt.next();
+                actualValue = feature.getAttribute(PointStackerProcess.ATTR_SORTEDBYFIELD).toString();
+                assert actualValue == expectedValueDesc.get(i): "Expected different value after sorting collection!";
+                i = i + 1;
+            }
         } finally {
             featureIt.close();
         }
@@ -627,7 +626,7 @@ public class PointStackerCMTest {
                         fc,
                         "grid",
                         1, // cellSize
-                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
                         null,
                         "attribute c",
@@ -655,7 +654,7 @@ public class PointStackerCMTest {
         try {
             while (featureIt.hasNext()) {
                 SimpleFeature feature = featureIt.next();
-                actualValue = feature.getAttribute(PointStackerCM.ATTR_SORTEDBYFIELD).toString();
+                actualValue = feature.getAttribute(PointStackerProcess.ATTR_SORTEDBYFIELD).toString();
                 assert actualValue == expectedValueAsc.get(i): "Expected different value after sorting collection!";
                 i = i + 1;
             }
@@ -668,7 +667,7 @@ public class PointStackerCMTest {
                         fc,
                         "grid",
                         1, // cellSize
-                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
                         null,
                         "attribute c",
@@ -696,7 +695,7 @@ public class PointStackerCMTest {
         try {
             while (featureIt.hasNext()) {
                 SimpleFeature feature = featureIt.next();
-                actualValue = feature.getAttribute(PointStackerCM.ATTR_SORTEDBYFIELD).toString();
+                actualValue = feature.getAttribute(PointStackerProcess.ATTR_SORTEDBYFIELD).toString();
                 assert actualValue == expectedValueNeg.get(i): "Expected different value after sorting collection!";
                 i = i + 1;
             }
@@ -706,7 +705,7 @@ public class PointStackerCMTest {
     }
     
     /** Get the stacked point closest to the provided coordinate */
-    private SimpleFeature getClosestResultPoint(SimpleFeatureCollection result, Coordinate testPt, 
+    private SimpleFeature getClosestResultPoint(SimpleFeatureCollection result, Coordinate testPt,
                                                  boolean valCoo) {
         /** Find closest point to loc pt, then check that the attributes match */
         double minDist = Double.MAX_VALUE;
@@ -722,11 +721,11 @@ public class PointStackerCMTest {
                 minDist = dist;
             }
         }
-        
+
         if (valCoo) {
             assert minDist == 0.0 : "Validation of coordinate failed! Should comply with the indicated coordinate!";
         }
-        
+
         return closest;
     }
 
@@ -734,7 +733,7 @@ public class PointStackerCMTest {
      * Check that a result set contains a stacked point in the right cell with expected attribute
      * values. Because it's not known in advance what the actual location of a stacked point will
      * be, a nearest-point strategy is used.
-     * 
+     *
      * CM_POINTSTACKER: If actual location of stacked point can be determined (for instance for 
      * PositionStackedGeom.Average or PositionStackedGeom.Extent), and is required to 
      * be checked through Coordinate testPt, set valCoo = true to validate the distance of the closest point to 
@@ -751,15 +750,15 @@ public class PointStackerCMTest {
 
         SimpleFeature f = getClosestResultPoint(result, testPt, valCoo);
         assertNotNull(f);
-                
+
         /** Find closest point to loc pt, then check that the attributes match */
-        int count = (Integer) f.getAttribute(PointStackerCM.ATTR_COUNT);
-        int countunique = (Integer) f.getAttribute(PointStackerCM.ATTR_COUNT_UNIQUE);
+        int count = (Integer) f.getAttribute(PointStackerProcess.ATTR_COUNT);
+        int countunique = (Integer) f.getAttribute(PointStackerProcess.ATTR_COUNT_UNIQUE);
         double normCount = Double.NaN;
         double normCountUnique = Double.NaN;
         if (expectedProportion != null) {
-            normCount = (Double) f.getAttribute(PointStackerCM.ATTR_NORM_COUNT);
-            normCountUnique = (Double) f.getAttribute(PointStackerCM.ATTR_NORM_COUNT_UNIQUE);
+            normCount = (Double) f.getAttribute(PointStackerProcess.ATTR_NORM_COUNT);
+            normCountUnique = (Double) f.getAttribute(PointStackerProcess.ATTR_NORM_COUNT_UNIQUE);
         }
 
         assertEquals(expectedCount, count);
@@ -769,29 +768,29 @@ public class PointStackerCMTest {
             assertEquals(expectedProportionUnique, normCountUnique, 0.0001);
     }
 
-    private void checkSchemaCorrect(SimpleFeatureType ft, boolean includeProportionColumns, 
+    private void checkSchemaCorrect(SimpleFeatureType ft, boolean includeProportionColumns,
                                     int expectedAttributeCount) {
         if (includeProportionColumns) {
             // assertEquals(5, ft.getAttributeCount()); old version before adding envelope
-            assertEquals(expectedAttributeCount + 2, ft.getAttributeCount()); 
+            assertEquals(expectedAttributeCount + 2, ft.getAttributeCount());
         } else {
             // assertEquals(3, ft.getAttributeCount()); old version before adding envelope.
-            assertEquals(expectedAttributeCount, ft.getAttributeCount()); 
+            assertEquals(expectedAttributeCount, ft.getAttributeCount());
         }
         assertEquals(Point.class, ft.getGeometryDescriptor().getType().getBinding());
         assertEquals(
                 Integer.class,
-                ft.getDescriptor(PointStackerCM.ATTR_COUNT).getType().getBinding());
+                ft.getDescriptor(PointStackerProcess.ATTR_COUNT).getType().getBinding());
         assertEquals(
                 Integer.class,
-                ft.getDescriptor(PointStackerCM.ATTR_COUNT_UNIQUE).getType().getBinding());
+                ft.getDescriptor(PointStackerProcess.ATTR_COUNT_UNIQUE).getType().getBinding());
         if (includeProportionColumns) {
             assertEquals(
                     Double.class,
-                    ft.getDescriptor(PointStackerCM.ATTR_NORM_COUNT).getType().getBinding());
+                    ft.getDescriptor(PointStackerProcess.ATTR_NORM_COUNT).getType().getBinding());
             assertEquals(
                     Double.class,
-                    ft.getDescriptor(PointStackerCM.ATTR_NORM_COUNT_UNIQUE)
+                    ft.getDescriptor(PointStackerProcess.ATTR_NORM_COUNT_UNIQUE)
                             .getType()
                             .getBinding());
         }
@@ -808,7 +807,7 @@ public class PointStackerCMTest {
      */
     private SimpleFeatureCollection createSampleData(ReferencedEnvelope boundingBox, Coordinate[] pts,
                                                      List<String> attrA, List<String> attrB, List<String> attrC) {
-        SimpleFeatureType type = createSampleDataType(boundingBox); // CM_POINTSTACKER 
+        SimpleFeatureType type = createSampleDataType(boundingBox);
         SimpleFeatureBuilder fb = new SimpleFeatureBuilder(type);
         DefaultFeatureCollection fc = new DefaultFeatureCollection();
         GeometryFactory factory = new GeometryFactory(new PackedCoordinateSequenceFactory());
@@ -817,11 +816,9 @@ public class PointStackerCMTest {
             Geometry point = factory.createPoint(pts[i]);
             fb.add(point);
             fb.add(pts[i].getZ());
-            // CM_POINTSTACKER START
             fb.add(attrA.get(i));
             fb.add(attrB.get(i));
             fb.add(attrC.get(i));
-            // CM_POINTSTACKER END
             fc.add(fb.buildFeature(null));
         }
 
@@ -831,7 +828,7 @@ public class PointStackerCMTest {
     /**
      * Creates the schema of the sample data set
      * @param bounds bounding box of data set 
-     * @return SimpleFeatureType 
+     * @return SimpleFeatureType
      */
     private SimpleFeatureType createSampleDataType(ReferencedEnvelope bounds) {
         SimpleFeatureTypeBuilder tb = new SimpleFeatureTypeBuilder();
@@ -839,12 +836,11 @@ public class PointStackerCMTest {
         tb.setCRS(bounds.getCoordinateReferenceSystem());
         tb.add("shape", MultiPoint.class);
         tb.add("value", Double.class);
-        // CM_POINTSTACKER START
         tb.add("attribute a", Polygon.class);
         tb.add("attribute b", Polygon.class);
         tb.add("attribute c", Polygon.class);
-        // CM_POINTSTACKER END
         SimpleFeatureType sfType = tb.buildFeatureType();
         return sfType;
     }
 }
+
