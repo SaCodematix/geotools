@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
-
 import de.codematix.bast.PointStackerCM;
 import org.geoserver.wps.gs.GeoServerProcess;
 import org.geotools.data.collection.ListFeatureCollection;
@@ -105,7 +104,7 @@ import org.opengis.util.ProgressListener;
  * data set). The location options 'nearest' and 'weighted' of how to position the cluster point is expanded 
  * by 'average' and 'extent'. 
  *
- * <p> If the user wants to sort (result.SortBy()) the resulting data collection after a specified original attribute 
+ * <p> If the user wants to sort (result.SortBy()) the resulting data collection by a specified original attribute 
  * field, for instance grades from 1 to 6, three additional parameters are introduced: 'argSortField' (e.g. 'grade'), 
  * argSortOrder (can be either 'DESCENDING' (default) or 'ASCENDING'), and 'argSortValueClusterPt' to set a 
  * representative value for cluster points that otherwise would contain a list of grades, instead of a single number 
@@ -235,20 +234,20 @@ public class PointStackerProcess implements GeoServerProcess {
                     SimpleFeatureCollection data,
             // process parameters
             @DescribeParameter(
-                    // CM_POINTSTACKER START
+            // CM_POINTSTACKER START
                     name = "clusterBasis",
                     description = "Indicate basis for clustering methods: 'grid' (default), or an original " +
                             "attribute such as state or district (data-dependent).", 
                     defaultValue = "grid"
             )
                     String argClusterBasis,
+            // CM_POINTSTACKER END
             @DescribeParameter(
                     name = "clusterSize",
                     description = "Size of grid cell to aggregate to. Required for cluster basis 'grid'!", 
                     min = 0 // not necessary, if clusterBasis is an attribute
             )
                     Integer clusterSize,
-            // CM_POINTSTACKER END
             @DescribeParameter(
                     name = "positionClusterPt",
                     description = "Weight cluster position based on points added as nearest pt (default), " +
@@ -267,13 +266,13 @@ public class PointStackerProcess implements GeoServerProcess {
                     name = "originalAttributes",
                     description = "List of original attributes that are requested to be returned. If these " +
                             "indicated attributes are no actual original attributes of data, they will be ignored. " +
-                            "Required as comma-separated list of format, e.g: a,b,c. All in small letters!",
+                            "Required as comma-separated list of format, e.g: a,b,c. All in lower case!",
                     min = 0
             )
                     String argOrigAttributes,
             @DescribeParameter(
                     name = "sortField",
-                    description = "Attribute field after which resulting collection (optionally) can be sorted.",
+                    description = "Attribute field by which resulting collection (optionally) can be sorted.",
                     min = 0
             )
                     String argSortField,
@@ -286,7 +285,7 @@ public class PointStackerProcess implements GeoServerProcess {
                     String argSortOrder,
             @DescribeParameter(
                     name = "clusteredSortValue",
-                    description = "If a collection is desired to be sorted after a specified column 'sortField', here" +
+                    description = "If a collection is desired to be sorted by a specified column 'sortField', here" +
                             "you can indicate the value that will be used for clustered points as sort value since only" +
                             "single points will keep the original value of the 'sortField' while clustered points " +
                             "gather the values of the 'sortField's to an array which will be replaced by this value " +
