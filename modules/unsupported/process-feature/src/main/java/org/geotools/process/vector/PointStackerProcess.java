@@ -145,8 +145,8 @@ import org.opengis.util.ProgressListener;
  */
 
 @DescribeProcess(
-        title = "PointStackerProcess",
-        description = "Aggregates a collection of feature points to clusters."
+        title = "Point Stacker",
+        description = "Aggregates a collection of points over a grid into one point per grid cell."
 )
 public class PointStackerProcess implements GeoServerProcess {
     public enum PreserveLocation {
