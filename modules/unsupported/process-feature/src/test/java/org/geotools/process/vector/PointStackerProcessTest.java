@@ -843,4 +843,3 @@ public class PointStackerProcessTest {
         return sfType;
     }
 }
-
