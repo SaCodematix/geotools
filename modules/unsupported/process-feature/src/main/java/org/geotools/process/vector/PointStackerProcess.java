@@ -141,7 +141,7 @@ import org.opengis.util.ProgressListener;
  */
 
 @DescribeProcess(
-        title = "pointStackerFeatureInfo",
+        title = "PointStackerProcess",
         description = "Aggregates a collection of feature points to clusters."
 )
 public class PointStackerProcess implements GeoServerProcess {
