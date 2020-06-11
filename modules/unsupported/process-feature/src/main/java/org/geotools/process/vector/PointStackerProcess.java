@@ -1153,10 +1153,6 @@ public class PointStackerProcess implements GeoServerProcess {
         // CM_POINTSTACKER START
         final String sortByParameter = sortBy;
         final String sortOrder = argSortOrder;
-        System.out.println("######## ####### " +
-                "  ## sortOrder " + sortOrder +
-                " ### sortByParameter " + sortByParameter);
-
         SimpleFeatureCollection resultSorted = result.sort( new SortBy()
         {
             @Override
