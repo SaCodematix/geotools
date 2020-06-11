@@ -35,7 +35,6 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.process.ProcessException;
 import org.geotools.process.factory.DescribeParameter;
@@ -94,30 +93,35 @@ import org.opengis.util.ProgressListener;
  * *************************************
  * CM_POINTSTACKER (Codematix extensions are marked with "CM_POINTSTACKER [START/END]")
  *
- * <p>Definition: The data set consists of features that are stacked to cluster. A cluster point then is 
- * representing the assigned features. A StackedPoint contains a feature that is stacked to a cluster. Original 
- * attributes are column names of the data set connected through the GeoServer datastore. Single points are 
- * features that are not assigned to a cluster with other features, thus, count equals 1.
+ * <p>(Definition: The data set consists of features that are stacked to cluster. A cluster point then is
+ * representing the assigned features. A StackedPoint contains a feature that is stacked to a cluster. Original
+ * attributes are column names of the data set connected through the GeoServer datastore. Single points are
+ * features that are not assigned to a cluster with other features, thus, count equals 1.)
  *
- * <p> In addition to the original source code and the clustering by grid, the CM_POINTSTACKER adjustments allow 
+ * <p> In addition to the original source code and the clustering by grid, our adjustments allow
  * GeoServer users to cluster by an original attribute, such as state or district (depening on the given          
- * data set). The location options 'nearest' and 'weighted' of how to position the cluster point is expanded 
- * by 'average' and 'extent'. 
+ * data set). The location options 'nearest' and 'weighted' of how to position the cluster point is expanded
+ * by 'average' (average of all coordinates of the clustered features) and 'extent' (center of the minimum and maximum
+ * coordinates in x and y direction). For this, an additional input parameter clusterBasis is added. Depending on 
+ * the user case and the data, these results in more suitable cluster point locations.
  *
- * <p> If the user wants to sort (result.SortBy()) the resulting data collection by a specified original attribute 
- * field, for instance grades from 1 to 6, three additional parameters are introduced: 'argSortField' (e.g. 'grade'), 
- * argSortOrder (can be either 'DESCENDING' (default) or 'ASCENDING'), and 'argSortValueClusterPt' to set a 
- * representative value for cluster points that otherwise would contain a list of grades, instead of a single number 
- * that can be sorted.
+ * <p> The output is expanded by additional returning values. The fids (listStackedPointsIDs) and coordinates
+ * (listStackedPtsCoos) of the features belonging to the cluster are listed, all available properties 
+ * (attributes & values) for single points (singlePointOrigAttributes).
  *
- * <p> The output is expanded by additional returning values. The fids and coordinates of the 
- * features belonging to the cluster are listed, all available properties (attributes & values) for single points, 
- * as well as optional columns for specified original attributes. For instance, if the following list is given in the  
- * style as list of original attributes, 
+ * <p> If the user wants to sort (sortedByField by overwriting default values of result.SortBy()) the resulting data 
+ * collection by a specified original attribute field, for instance grades from 1 to 6, three additional parameters 
+ * are introduced: sortField (e.g. 'grade'), sortBy (can be either 'DESCENDING' (default) or 'ASCENDING'), and 
+ * clusteredSortValue to set a representative value for cluster points that otherwise would contain a list of grades, 
+ * instead of a single number that can be sorted. (we required this sorting method to influence the render order of 
+ * the PointSymbolizers in the style .sld file)
+ *
+ * <p> With these extensions, the user also has the possibility to optionally add original attributes to the output 
+ * result (originalAttributes). For instance, if the following list is given in the style as list of original attributes,
  *     ```
  *     <ogc:Function name="parameter">
  *       <ogc:Literal>originalAttributes</ogc:Literal>
- *       <ogc:Literal>attrA,attrB</ogc:Literal> 
+ *       <ogc:Literal>attrA,attrB,attrC</ogc:Literal>
  *     </ogc:Function>
  *     ```
  * the extended output is a FeatureCollection containing the following attributes:
@@ -130,9 +134,10 @@ import org.opengis.util.ProgressListener;
  *    <li><code>listStackedPtsCoos</code> - list of all coordinates of the stacked features in the cluster 
  *    <li><code>singlePointOrigAttributes</code> - only for single points, all of its data properties (attributes & values)
  *    <li><code>sortedByField</code> contains the original attribute values of the sortField, or the representative 
- *                                  argSortValueClusterPt for cluster points, or nothing, if no sortField is indicated 
+ *                                   argSortValueClusterPt for cluster points, or nothing, if no sortField is indicated 
  *    <li><code>attrA</code> - list of values for the first attribute of the input parameter originalAttributes
- *    <li><code>attrB</code> - list of values for the first attribute of the input parameter originalAttributes
+ *    <li><code>attrB</code> - list of values for the second attribute of the input parameter originalAttributes
+ *    <li><code>attrC</code> - list of values for the third attribute of the input parameter originalAttributes, and so on.
  * </ul>
  *
  * @author Sabrina Arnold sarnold@codematix.de 
@@ -238,7 +243,8 @@ public class PointStackerProcess implements GeoServerProcess {
                     name = "clusterBasis",
                     description = "Indicate basis for clustering methods: 'grid' (default), or an original " +
                             "attribute such as state or district (data-dependent).", 
-                    defaultValue = "grid"
+                    defaultValue = "grid",
+                    min = 0
             )
                     String argClusterBasis,
             // CM_POINTSTACKER END
@@ -465,7 +471,7 @@ public class PointStackerProcess implements GeoServerProcess {
 
         // CM_POINTSTACKER START
         if (argSortField != null) {
-            SimpleFeatureCollection resultSorted = sortCollection(result, PointStackerCM.ATTR_SORTEDBYFIELD,
+            SimpleFeatureCollection resultSorted = sortCollection(result, PointStackerProcess.ATTR_SORTEDBYFIELD,
                     argSortOrder);
             return resultSorted;
         }
@@ -926,8 +932,6 @@ public class PointStackerProcess implements GeoServerProcess {
      */
     public static class StackPointsMethods {
         // CM_POINTSTACKER START
-        // private final GeometryFactory GEOMETRY_FACTORY = JTSFactoryFinder.getGeometryFactory(); // CM_POINTSTACKER
-    
         private static final Logger LOG = Logger.getLogger(StackPointsMethods.class.getSimpleName());
         // CM_POINTSTACKER END
     
