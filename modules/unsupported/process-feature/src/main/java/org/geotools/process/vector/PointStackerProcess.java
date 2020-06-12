@@ -111,7 +111,7 @@ import org.opengis.util.ProgressListener;
  *
  * <p> If the user wants to sort (sortedByField by overwriting default values of result.SortBy()) the resulting data 
  * collection by a specified original attribute field, for instance grades from 1 to 6, three additional parameters 
- * are introduced: sortField (e.g. 'grade'), sortBy (can be either 'DESCENDING' (default) or 'ASCENDING'), and 
+ * are introduced: sortField (e.g. 'grade'), sortBy (can be either 'DESCENDING' or 'ASCENDING' (default)), and 
  * clusteredSortValue to set a representative value for cluster points that otherwise would contain a list of grades, 
  * instead of a single number that can be sorted. (we required this sorting method to influence the render order of 
  * the PointSymbolizers in the style .sld file)
@@ -285,7 +285,7 @@ public class PointStackerProcess implements GeoServerProcess {
             @DescribeParameter(
                     name = "sortBy",
                     description = "If collection is desired to be sorted through a specified 'sortField', one can " +
-                            "indicate the method to sort, either 'DESCENDING' (default) or 'ASCENDING'.",
+                            "indicate the method to sort, either 'DESCENDING' or 'ASCENDING' (default).",
                     min = 0
             )
                     String argSortOrder,
@@ -1171,8 +1171,8 @@ public class PointStackerProcess implements GeoServerProcess {
             }
             @Override
             public SortOrder getSortOrder() {
-                if (sortOrder == "ASCENDING") { return SortOrder.ASCENDING; }
-                return SortOrder.DESCENDING;
+                if (sortOrder == "DESCENDING") { return SortOrder.DESCENDING; }
+                return SortOrder.ASCENDING;
             }
         });
         return resultSorted;
