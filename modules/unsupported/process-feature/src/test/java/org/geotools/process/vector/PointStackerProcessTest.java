@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Lists;
+import de.codematix.bast.PointStackerCM;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
@@ -662,16 +663,16 @@ public class PointStackerProcessTest {
             featureIt.close();
         }
 
-        // TEST NEGATIVE VALUE FOR argSortValueClusterPt
+        // TEST NEGATIVE VALUE FOR argSortValueClusterPt AND DEFAULT SORTING ORDER
         result = psp.execute(
                         fc,
                         "grid",
                         1, // cellSize
-                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
                         null,
                         "attribute c",
-                        "ASCENDING",
+                        null, // argSortOrder (with default ASCENDING)
                         "-999",
                         null, // preserve location
                         bounds, // outputBBOX
