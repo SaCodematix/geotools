@@ -103,7 +103,7 @@ import org.opengis.util.ProgressListener;
  * data set). The location options 'nearest' and 'weighted' of how to position the cluster point is expanded
  * by 'average' (average of all coordinates of the clustered features) and 'extent' (center of the minimum and maximum
  * coordinates in x and y direction). For this, an additional input parameter clusterBasis is added. Depending on 
- * the user case and the data, these results in more suitable cluster point locations.
+ * the use case and the data, these results in more suitable cluster point locations.
  *
  * <p> The output is expanded by additional returning values. The fids (listStackedPointsIDs) and coordinates
  * (listStackedPtsCoos) of the features belonging to the cluster are listed, all available properties 
