@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Lists;
-import de.codematix.bast.PointStackerCM;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.DefaultFeatureCollection;
@@ -571,7 +570,7 @@ public class PointStackerProcessTest {
                         new Coordinate(14, 5)
                 };
         List<String> attrA = Lists.newArrayList("2.4", "1", "2.4", "3", "1", "3", "1");
-        List<String> attrB = Lists.newArrayList("I", "V", "II", "II", "I", "II", "I");
+        List<String> attrB = Lists.newArrayList("as", "jj", "g", "b", "k", "f", "s");
         List<String> attrC = Lists.newArrayList("3", "2", "2", "1", "3", "1", "5");
         SimpleFeatureCollection fc = createSampleData(bounds, pts, attrA, attrB, attrC);
 
@@ -663,12 +662,12 @@ public class PointStackerProcessTest {
             featureIt.close();
         }
 
-        // TEST NEGATIVE VALUE FOR argSortValueClusterPt AND DEFAULT SORTING ORDER
+        // TEST NEGATIVE VALUE FOR argSortValueStackedPt AND DEFAULT SORTING ORDER
         result = psp.execute(
                         fc,
                         "grid",
                         1, // cellSize
-                        PointStackerCM.PositionStackedGeom.Average, // weightClusterPosition
+                        PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
                         null, // normalize
                         null,
                         "attribute c",
@@ -698,6 +697,47 @@ public class PointStackerProcessTest {
                 SimpleFeature feature = featureIt.next();
                 actualValue = feature.getAttribute(PointStackerProcess.ATTR_SORTEDBYFIELD).toString();
                 assert actualValue == expectedValueNeg.get(i): "Expected different value after sorting collection!";
+                i = i + 1;
+            }
+        } finally {
+            featureIt.close();
+        }
+
+        // TEST TO SORT STRINGS 
+        result = psp.execute(
+                fc,
+                "grid",
+                1, // cellSize
+                PointStackerProcess.PositionStackedGeom.Average, // weightClusterPosition
+                null, // normalize
+                null,
+                "attribute b",
+                null, // argSortOrder (with default ASCENDING)
+                "a",
+                null, // preserve location
+                bounds, // outputBBOX
+                1000, // outputWidth
+                1000, // outputHeight
+                monitor);
+
+        checkSchemaCorrect(result.getSchema(), false, EXPECTED_ATTR_COUNT);
+        assertEquals(6, result.size());
+
+        featureIt = result.features();
+        i = 0;
+        ArrayList<String> expectedValueStr = new ArrayList<String>();
+        expectedValueStr.add("a");
+        expectedValueStr.add("b");
+        expectedValueStr.add("f");
+        expectedValueStr.add("g");
+        expectedValueStr.add("jj");
+        expectedValueStr.add("s");
+
+        try {
+            while (featureIt.hasNext()) {
+                SimpleFeature feature = featureIt.next();
+                actualValue = feature.getAttribute(PointStackerProcess.ATTR_SORTEDBYFIELD).toString();
+                assert actualValue == expectedValueStr.get(i): "Expected different value after sorting collection!";
                 i = i + 1;
             }
         } finally {
@@ -844,3 +884,4 @@ public class PointStackerProcessTest {
         return sfType;
     }
 }
+
