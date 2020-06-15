@@ -112,7 +112,7 @@ import org.opengis.util.ProgressListener;
  * <p> If the user wants to sort (sortedByField by overwriting default values of result.SortBy()) the resulting data 
  * collection by a specified original attribute field, for instance grades from 1 to 6, three additional parameters 
  * are introduced: sortField (e.g. 'grade'), sortBy (can be either 'DESCENDING' or 'ASCENDING' (default)), and 
- * clusteredSortValue to set a representative value for cluster points that otherwise would contain a list of grades, 
+ * sortValueStackedPt to set a representative value for cluster points that otherwise would contain a list of grades, 
  * instead of a single number that can be sorted. (we required this sorting method to influence the render order of 
  * the PointSymbolizers in the style .sld file)
  *
@@ -134,7 +134,7 @@ import org.opengis.util.ProgressListener;
  *    <li><code>listStackedPtsCoos</code> - list of all coordinates of the stacked features in the cluster 
  *    <li><code>singlePointOrigAttributes</code> - only for single points, all of its data properties (attributes & values)
  *    <li><code>sortedByField</code> contains the original attribute values of the sortField, or the representative 
- *                                   argSortValueClusterPt for cluster points, or nothing, if no sortField is indicated 
+ *                                   sortValueStackedPt for cluster points, or nothing, if no sortField is indicated 
  *    <li><code>attrA</code> - list of values for the first attribute of the input parameter originalAttributes
  *    <li><code>attrB</code> - list of values for the second attribute of the input parameter originalAttributes
  *    <li><code>attrC</code> - list of values for the third attribute of the input parameter originalAttributes, and so on.
@@ -223,7 +223,7 @@ public class PointStackerProcess implements GeoServerProcess {
     public static final String ATTR_SINGLE_PT = "singlePointOrigAttributes";
 
     // attribute contains the sorted original attribute values of the sortField for single points, or 
-    // argSortValueClusterPt for cluster points 
+    // sortValueStackedPt for cluster points 
     public static final String ATTR_SORTEDBYFIELD = "sortedByField";
     
     public static org.geotools.process.vector.PointStackerProcess.PositionStackedGeom POSITION_CLUSTER_PT = 
@@ -290,7 +290,7 @@ public class PointStackerProcess implements GeoServerProcess {
             )
                     String argSortOrder,
             @DescribeParameter(
-                    name = "clusteredSortValue",
+                    name = "sortValueStackedPt",
                     description = "If a collection is desired to be sorted by a specified column 'sortField', here" +
                             "you can indicate the value that will be used for clustered points as sort value since only" +
                             "single points will keep the original value of the 'sortField' while clustered points " +
@@ -298,7 +298,7 @@ public class PointStackerProcess implements GeoServerProcess {
                             "instead, such as 0 (default).",
                     min = 0
             )
-                    String argSortValueClusterPt,
+                    String argSortValueStackedPt,
             // CM_POINTSTACKER END
             @DescribeParameter(
                     name = "preserveLocation",
@@ -350,12 +350,12 @@ public class PointStackerProcess implements GeoServerProcess {
 
         // If indicated, initialize attribute to be sorted and representative sort value for clustered points 
         String sortField = null;
-        String sortValueClusterPt = "0";
+        String sortValueStackedPt = "0";
         if (argSortField != null) {
             sortField = argSortField;
         }
-        if (argSortValueClusterPt != null) {
-            sortValueClusterPt = argSortValueClusterPt;
+        if (argSortValueStackedPt != null) {
+            sortValueStackedPt = argSortValueStackedPt;
         }
         
         // get ArrayList of all the original attributes that are requested to be added as column to 
@@ -388,7 +388,7 @@ public class PointStackerProcess implements GeoServerProcess {
                     crsTransform,
                     clusterSizeSrc,
                     sortField,
-                    sortValueClusterPt);
+                    sortValueStackedPt);
         } else {
             // cluster by attribute
             stackedPts = StackPointsMethods.stackPointsByAttribute( // CM_POINTSTACKER (derived from stackPointsByGrid)
@@ -397,7 +397,7 @@ public class PointStackerProcess implements GeoServerProcess {
                     crsTransform,
                     argClusterBasis,
                     sortField,
-                    sortValueClusterPt);
+                    sortValueStackedPt);
         }
 
         SimpleFeatureType schema = createType(srcCRS, normalize, argOrigAttributesParts);
@@ -687,11 +687,11 @@ public class PointStackerProcess implements GeoServerProcess {
          *                               feature info in the map
          * @param feature the feature that is being added 
          * @param sortField attribute field to be sorted by
-         * @param sortValueClusterPt representative sort value for cluster points
+         * @param sortValueStackedPt representative sort value for cluster points
          */
         /** @todo change GeometryFactory */
         public void addPt(Coordinate pt, String id, ArrayList<String> argOrigAttributesParts, SimpleFeature feature , 
-                          String sortField, String sortValueClusterPt) {
+                          String argSortField, String sortValueStackedPt) {
             /**
              * Count of how many feature points are included within this cluster
              */
@@ -766,16 +766,12 @@ public class PointStackerProcess implements GeoServerProcess {
              * ATTR_CLUSTERPT_SORT_VALUE for all clustered points since otherwise their attribute values would be 
              * arranged in a list which cannot be sorted
              */
-            if (this.count == 1) { // only add these feature info only for single points
-                try {
-                    this.sortField = feature.getAttribute(sortField).toString();
+            if (argSortField != null) {
+                if (this.count == 1) { // only add these feature info only for single points
+                    this.sortField = feature.getAttribute(argSortField).toString();
+                } else if (this.count == 2) { // if more than a single point, set back to default value for cluster points
+                    this.sortField = sortValueStackedPt;
                 }
-                catch (NullPointerException e) {
-                    this.sortField = null;
-                    LOG.warning(e.getMessage() + " Failed to load indicated sortField for this features!");
-                }
-            } else if (this.count == 2) { // if more than a single point, set back to default value for cluster points
-                this.sortField = sortValueClusterPt;
             }
             
             /**
@@ -953,7 +949,7 @@ public class PointStackerProcess implements GeoServerProcess {
                 MathTransform crsTransform,
                 double clusterSize,
                 String sortField,
-                String sortValueClusterPt)
+                String sortValueStackedPt)
                 throws TransformException {
     
             SimpleFeatureIterator featureIt = data.features();
@@ -1006,7 +1002,7 @@ public class PointStackerProcess implements GeoServerProcess {
                         stackedPts.put(stkPt.getKey(), stkPt);
                     }
     
-                    stkPt.addPt(pout, id, argOrigAttributesParts, feature, sortField, sortValueClusterPt);
+                    stkPt.addPt(pout, id, argOrigAttributesParts, feature, sortField, sortValueStackedPt);
                 }
             } finally {
                 featureIt.close();
@@ -1030,7 +1026,7 @@ public class PointStackerProcess implements GeoServerProcess {
                 MathTransform crsTransform,
                 String argClusterByAttribute,
                 String sortField,
-                String sortValueClusterPt)
+                String sortValueStackedPt)
                 throws TransformException {
     
             SimpleFeatureIterator featureIt = data.features();
@@ -1095,7 +1091,7 @@ public class PointStackerProcess implements GeoServerProcess {
                     }
                     // CM_POINTSTACKER END
     
-                    stkPt.addPt(pout, id, argOrigAttributesParts, feature, sortField, sortValueClusterPt);
+                    stkPt.addPt(pout, id, argOrigAttributesParts, feature, sortField, sortValueStackedPt);
                 }
             } finally {
                 featureIt.close();
@@ -1171,7 +1167,7 @@ public class PointStackerProcess implements GeoServerProcess {
             }
             @Override
             public SortOrder getSortOrder() {
-                if (sortOrder == "DESCENDING") { return SortOrder.DESCENDING; }
+                if (sortOrder != null && sortOrder.equals("DESCENDING")) { return SortOrder.DESCENDING; }
                 return SortOrder.ASCENDING;
             }
         });
